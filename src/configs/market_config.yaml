@@ -1,0 +1,41 @@
+stocks:
+  - company_name: "Яндекс"
+    initial_price: 120.0
+    currency: "RUB"
+
+  - company_name: "Т"
+    initial_price: 95.0
+    currency: "USD"
+
+banks:
+  - bank_name: "ТБанк"
+    deposit_interest_rate: 0.05
+    currency: "USD"
+
+  - bank_name: "Сбер"
+    deposit_interest_rate: 0.045
+    currency: "EUR"
+
+metals:
+  - metal_type: "Gold"
+    initial_price: 1800.0
+    currency: "USD"
+
+  - metal_type: "Silver"
+    initial_price: 25.0
+    currency: "USD"
+
+bonds:
+  - bond_id: "ОФЗ26234"
+    face_value: 10000
+    interest_rate: 0.03
+    purchase_price: 9500
+    maturity_months: 36
+    currency: "RUB"
+
+  - bond_id: "ОФЗ26248"
+    face_value: 10000
+    interest_rate: 0.035
+    purchase_price: 9300
+    maturity_months: 60
+    currency: "RUB"

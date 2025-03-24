@@ -1,0 +1,15 @@
+stocks:
+  drift: 0.001         # Средний месячный прирост
+  volatility: 0.02     # Стандартное отклонение
+
+metals:
+  drift: 0.0
+  volatility: 0.05
+
+deposits:
+  drift: 0.0
+  volatility: 0.005
+
+bonds:
+  drift: 0.0
+  volatility: 0.005

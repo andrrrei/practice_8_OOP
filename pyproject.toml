@@ -1,0 +1,27 @@
+[project]
+name = "prac-8-oop"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
+packages = [
+    { include = "core", from = "src" },
+    { include = "gui", from = "src" },
+    { include = "investments", from = "src" },
+    { include = "trading_market", from = "src" },
+    { include = "configs", from = "src" }
+]
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "pydantic (>=2.10.6,<3.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "pyqt5 (>=5.15.11,<6.0.0)",
+    "matplotlib (>=3.10.1,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

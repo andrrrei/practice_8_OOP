@@ -1,0 +1,124 @@
+@startuml
+
+abstract class Investment {
+    - id : String
+    - amountInvested : double
+    - riskLevel : double
+    - currency : String
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + getCurrentValue(conj : ExternalConj) : double
+}
+
+class BankDeposit {
+    - interestRate : double
+    - depositTermMonths : int
+    - currentTermPassed : int
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + getCurrentValue(conj : ExternalConj) : double
+}
+
+class PreciousMetal {
+    - metalType : String
+    - quantity : double
+    - purchasePrice : double
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + getCurrentValue(conj : ExternalConj) : double
+}
+
+class GovernmentBond {
+    - faceValue : double
+    - interestRate : double
+    - purchasePrice : double
+    - maturityMonths : int
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + getCurrentValue(conj : ExternalConj) : double
+}
+
+class Stock {
+    - companyName : String
+    - shares : int
+    - purchasePrice : double
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + getCurrentValue(conj : ExternalConj) : double
+}
+
+class Portfolio {
+    - investments : List<Investment>
+    ...
+    + addInvestment(inv : Investment) : void
+    + removeInvestment(inv : Investment) : void
+    + calcTotalValue(conj : ExternalConj) : double
+    + calcMonthlyProfit(conj : ExternalConj) : double
+    + restructure(...) : void
+}
+
+class Fund {
+    - capital : double
+    - taxRate : double
+    - monthlyProfit : double
+    - portfolio : Portfolio
+    ...
+    + calcMonthlyProfit(conj : ExternalConj) : void
+    + payTax() : void
+    + acceptNewInvestments(amount : double) : void
+    + handleRedemptions(amount : double) : void
+    + restructurePortfolio(...) : void
+}
+
+class ExternalConj {
+    - currentMonth : int
+    - interestRates : Map<String, double>
+    - stockPrices : Map<String, double>
+    - metalPrices : Map<String, double>
+    - bondRates : Map<String, double>
+    - randomFactors : Object
+    ...
+    + updateConj() : void
+    + getStockPrice(company : String) : double
+    + getMetalPrice(metalType : String) : double
+    + getDepositRate(bank : String) : double
+}
+
+class Player {
+    - playerName : String
+    ...
+    + makeInvestments(fund : Fund, conj : ExternalConj) : void
+}
+
+class Game {
+    - currentMonth : int
+    - maxMonths : int
+    - fund : Fund
+    - externalConj : ExternalConj
+    - player : Player
+    ...
+    + initGame(...) : void
+    + simulateMonth() : void
+    + runSimulation() : void
+    + printStatistics() : void
+}
+
+
+
+Investment <|-- BankDeposit
+Investment <|-- PreciousMetal
+Investment <|-- GovernmentBond
+Investment <|-- Stock
+
+
+Portfolio o-- Investment
+
+Fund *-- Portfolio
+
+Game --> Fund
+Game --> ExternalConj
+Game --> Player
+
+Player --> Fund
+
+@enduml
