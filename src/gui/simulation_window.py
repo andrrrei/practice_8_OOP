@@ -21,11 +21,11 @@ from core.game import Game
 from trading_market.market import Market
 from core.models import (
     PortfolioHoldings,
+    PlayerPurchase,
     StockHolding,
     BondHolding,
     MetalHolding,
     DepositHolding,
-    PlayerPurchase,
 )
 
 
@@ -39,16 +39,18 @@ class SimulationWindow(QMainWindow):
     ):
         super().__init__()
         self.setWindowTitle("Investment Portfolio Simulation")
+
         self.simulation_months = months
         self.current_month = 0
-        self.pending_decision = None
         self.initial_decision = initial_decision
+
         self.setup_simulation(capital, tax_rate)
         self.setup_ui()
 
     def setup_simulation(self, capital: float, tax_rate: float):
         self.market = Market()
         self.external_conj: ExternalConj = self.market.create_external_conj()
+
         self.portfolio = Portfolio()
         self.fund = Fund(capital=capital, tax_rate=tax_rate, portfolio=self.portfolio)
         self.player = Player(player_name="Andrei")
@@ -75,6 +77,7 @@ class SimulationWindow(QMainWindow):
 
         self.month_label = QLabel("Месяц: 0")
         self.status_label = QLabel("Статус фонда: -")
+
         self.layout.addWidget(self.month_label)
         self.layout.addWidget(self.status_label)
 
@@ -94,6 +97,7 @@ class SimulationWindow(QMainWindow):
         self.layout.addWidget(self.log_text)
 
         btn_layout = QHBoxLayout()
+
         self.next_button = QPushButton("Следующий месяц")
         self.next_button.clicked.connect(self.next_month)
         btn_layout.addWidget(self.next_button)
@@ -108,7 +112,7 @@ class SimulationWindow(QMainWindow):
         self.update_portfolio_display()
         status = self.fund.current_status(self.external_conj)
         self.graph_widget.update_graph(0, status.total_capital, status.portfolio_value)
-        self.stock_graph_widget.update_graph(0, self.external_conj.stock_prices)
+        self.stock_graph_widget.update_graph(0, self.external_conj.data.stock_prices)
 
     def update_portfolio_display(self) -> None:
         portfolio_info = "Текущие активы:\n"
@@ -118,13 +122,16 @@ class SimulationWindow(QMainWindow):
             for inv in self.portfolio.investments:
                 inv_type = type(inv).__name__
                 current_value = inv.get_current_value(self.external_conj)
-                portfolio_info += f"Актив: {inv.id}, Тип: {inv_type}, Текущая стоимость: {current_value:.2f}\n"
+                portfolio_info += (
+                    f"Актив: {inv.id}, Тип: {inv_type}, "
+                    f"Текущая стоимость: {current_value:.2f}\n"
+                )
 
         self.portfolio_text.setPlainText(portfolio_info)
 
     def open_decision_dialog(self):
         available_assets = self.market.get_available_assets(self.external_conj)
-        current_holdings = self.get_current_holdings(self.portfolio, self.external_conj)
+        current_holdings = self.get_current_holdings(self.portfolio)
 
         dialog = PurchaseDialog(available_assets, current_holdings, self)
         if dialog.exec_() == dialog.Accepted:
@@ -132,12 +139,14 @@ class SimulationWindow(QMainWindow):
             self.log_text.append(
                 "Совершенная покупка:\n" + decision.model_dump_json(indent=2)
             )
+
             self.player.manage_portfolio(
                 fund=self.fund,
                 conj=self.external_conj,
                 decision=decision,
                 available_assets=available_assets,
             )
+
             self.update_portfolio_display()
             status = self.fund.current_status(self.external_conj)
             self.status_label.setText(
@@ -145,13 +154,13 @@ class SimulationWindow(QMainWindow):
                 f"Месячная прибыль: {status.monthly_profit:.2f}  |  "
                 f"Стоимость портфеля: {status.portfolio_value:.2f}"
             )
+
             self.graph_widget.update_graph(
                 self.current_month, status.total_capital, status.portfolio_value
             )
-            if hasattr(self, "stock_graph_widget"):
-                self.stock_graph_widget.update_graph(
-                    self.current_month, self.external_conj.stock_prices
-                )
+            self.stock_graph_widget.update_graph(
+                self.current_month, self.external_conj.data.stock_prices
+            )
 
     def next_month(self):
         if self.current_month < self.simulation_months:
@@ -172,25 +181,25 @@ class SimulationWindow(QMainWindow):
             )
             self.log_text.append(month_output)
             self.update_portfolio_display()
+
             self.graph_widget.update_graph(
                 self.current_month, status.total_capital, status.portfolio_value
             )
             self.stock_graph_widget.update_graph(
-                self.current_month, self.external_conj.stock_prices
+                self.current_month, self.external_conj.data.stock_prices
             )
         else:
             self.next_button.setEnabled(False)
             self.decision_button.setEnabled(False)
             self.log_text.append("\nИгра окончена.")
 
-    def get_current_holdings(self, portfolio: Portfolio, conj) -> PortfolioHoldings:
-
+    def get_current_holdings(self, portfolio: Portfolio) -> PortfolioHoldings:
         holdings = PortfolioHoldings()
 
         for inv in portfolio.investments:
             inv_type = type(inv).__name__.lower()
 
-            # --- Акции ---
+            # Акции
             if inv_type == "stock":
                 found = next(
                     (
@@ -207,7 +216,7 @@ class SimulationWindow(QMainWindow):
                         StockHolding(company_name=inv.company_name, shares=inv.shares)
                     )
 
-            # --- Депозиты ---
+            # Депозиты
             elif inv_type == "bankdeposit":
                 found = next(
                     (d for d in holdings.deposits if d.bank_name == inv.bank_name), None
@@ -219,7 +228,7 @@ class SimulationWindow(QMainWindow):
                         DepositHolding(bank=inv.bank_name, amount=inv.amount_invested)
                     )
 
-            # --- Металлы ---
+            # Металлы
             elif inv_type == "preciousmetal":
                 found = next(
                     (m for m in holdings.metals if m.metal_type == inv.metal_type), None
@@ -231,7 +240,7 @@ class SimulationWindow(QMainWindow):
                         MetalHolding(metal_type=inv.metal_type, quantity=inv.quantity)
                     )
 
-            # --- Облигации ---
+            # Облигации
             elif inv_type == "governmentbond":
                 found = next(
                     (b for b in holdings.bonds if b.bond_id == inv.bond_id), None

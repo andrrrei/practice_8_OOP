@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-# --- Volatility Models ---
+# --- External Conj Models ---
 class AssetVolatility(BaseModel):
     drift: float = Field(..., description="Средний месячный прирост")
     volatility: float = Field(..., description="Стандартное отклонение изменений")
@@ -12,6 +12,20 @@ class ExternalConjConfig(BaseModel):
     metals: AssetVolatility
     deposits: AssetVolatility
     bonds: AssetVolatility
+
+
+class PriceItem(BaseModel):
+    item_id: str
+    value: float
+
+
+class ExternalConjData(BaseModel):
+    current_month: int = 0
+    interest_rates: list[PriceItem] = []
+    stock_prices: list[PriceItem] = []
+    metal_prices: list[PriceItem] = []
+    bond_rates: list[PriceItem] = []
+    volatility_config: ExternalConjConfig
 
 
 # --- Market Models ---
