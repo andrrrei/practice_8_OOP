@@ -2,11 +2,9 @@
 
 skinparam classAttributeIconSize 0
 
-' === Pydantic base ===
 class BaseModel
 
 
-' === Игровая логика ===
 class Game {
     currentMonth : int
     maxMonths : int
@@ -41,7 +39,6 @@ class Portfolio {
 }
 
 
-' === Абстракция инвестиций ===
 abstract class Investment {
     id : str
     amountInvested : float
@@ -90,7 +87,6 @@ Game --> Player
 Player --> Fund
 
 
-' === Внешняя конъюнктура ===
 class ExternalConj {
     data : ExternalConjData
     update_conj() : void
@@ -132,7 +128,6 @@ ExternalConjData --> PriceItem
 ExternalConjConfig --> AssetVolatility
 
 
-' === Конфигурация рынка и доступные активы ===
 class Market {
     data : MarketConfig
     get_available_assets(conj) : AvailableAssets
@@ -156,7 +151,6 @@ class AvailableAssets {
 Market --> MarketConfig
 Market --> AvailableAssets
 
-' === Решения игрока ===
 class PlayerPurchase {
     stocks : List[StockPurchase]
     deposits : List[DepositPurchase]

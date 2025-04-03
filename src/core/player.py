@@ -70,15 +70,29 @@ class Player:
             elif stock_dec.shares > 0:
                 current_price = stock_info.current_price
                 currency = stock_info.currency
-                investment = Stock(
-                    id=f"Stock-{stock_dec.company_name}-{stock_dec.shares}",
-                    amount_invested=current_price * stock_dec.shares,
-                    currency=currency,
-                    company_name=stock_dec.company_name,
-                    shares=stock_dec.shares,
-                    purchase_price=current_price,
-                )
-                fund.add_investment(investment)
+
+                existing_stock = None
+                for inv in fund.portfolio.investments:
+                    if (
+                        isinstance(inv, Stock)
+                        and inv.company_name == stock_dec.company_name
+                    ):
+                        existing_stock = inv
+                        break
+
+                if existing_stock:
+                    existing_stock.shares += stock_dec.shares
+                    existing_stock.amount_invested += current_price * stock_dec.shares
+                else:
+                    investment = Stock(
+                        id=f"Stock-{stock_dec.company_name}",
+                        amount_invested=current_price * stock_dec.shares,
+                        currency=currency,
+                        company_name=stock_dec.company_name,
+                        shares=stock_dec.shares,
+                        purchase_price=current_price,
+                    )
+                    fund.add_investment(investment)
             else:
                 print(
                     f"Продажа акций {stock_dec.company_name} в кол-ве {-stock_dec.shares}"
@@ -97,15 +111,25 @@ class Player:
             if dep_dec.amount > 0:
                 rate = dep_info.interest_rate
                 currency = dep_info.currency
-                investment = BankDeposit(
-                    id=f"Deposit-{dep_dec.bank}-{dep_dec.amount}",
-                    name=dep_dec.bank,
-                    amount_invested=dep_dec.amount,
-                    currency=currency,
-                    interest_rate=rate,
-                    deposit_term_months=dep_dec.term_months,
-                )
-                fund.add_investment(investment)
+
+                existing_deposit = None
+                for inv in fund.portfolio.investments:
+                    if isinstance(inv, BankDeposit) and inv.bank_name == dep_dec.bank:
+                        existing_deposit = inv
+                        break
+
+                if existing_deposit:
+                    existing_deposit.amount_invested += dep_dec.amount
+                else:
+                    investment = BankDeposit(
+                        id=f"Deposit-{dep_dec.bank}",
+                        name=dep_dec.bank,
+                        amount_invested=dep_dec.amount,
+                        currency=currency,
+                        interest_rate=rate,
+                        deposit_term_months=dep_dec.term_months,
+                    )
+                    fund.add_investment(investment)
             else:
                 print(
                     f"Снятие денег со вклада {dep_dec.bank} на сумму {-dep_dec.amount}"
@@ -129,15 +153,29 @@ class Player:
             if metal_dec.quantity > 0:
                 current_price = m_info.current_price
                 currency = m_info.currency
-                investment = PreciousMetal(
-                    id=f"Metal-{metal_dec.metal_type}-{metal_dec.quantity}",
-                    amount_invested=current_price * metal_dec.quantity,
-                    currency=currency,
-                    metal_type=metal_dec.metal_type,
-                    quantity=metal_dec.quantity,
-                    purchase_price=current_price,
-                )
-                fund.add_investment(investment)
+
+                existing_metal = None
+                for inv in fund.portfolio.investments:
+                    if (
+                        isinstance(inv, PreciousMetal)
+                        and inv.metal_type == metal_dec.metal_type
+                    ):
+                        existing_metal = inv
+                        break
+
+                if existing_metal:
+                    existing_metal.quantity += metal_dec.quantity
+                    existing_metal.amount_invested += current_price * metal_dec.quantity
+                else:
+                    investment = PreciousMetal(
+                        id=f"Metal-{metal_dec.metal_type}",
+                        amount_invested=current_price * metal_dec.quantity,
+                        currency=currency,
+                        metal_type=metal_dec.metal_type,
+                        quantity=metal_dec.quantity,
+                        purchase_price=current_price,
+                    )
+                    fund.add_investment(investment)
             else:
                 print(
                     f"Продажа металла {metal_dec.metal_type} в кол-ве {-metal_dec.quantity}"

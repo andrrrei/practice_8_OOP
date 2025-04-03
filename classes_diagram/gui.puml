@@ -1,0 +1,51 @@
+@startuml GUIArchitecture
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+
+class PlayWindow {
+    + nextMonth()
+    + fastForwardToEnd()
+    + startNewGame()
+    + updatePortfolioDisplay()
+    + updateAllGraphs()
+}
+
+class PortfolioTab {
+    + displayPortfolio()
+    + showGraphs()
+}
+
+class PurchaseTab {
+    + showAssetOptions()
+    + applyUserChanges()
+}
+
+PlayWindow --> PortfolioTab
+PlayWindow --> PurchaseTab
+
+class GraphWidget {
+    + updateGraph(month, values)
+}
+
+PortfolioTab --> GraphWidget
+
+PlayWindow --> Fund
+PlayWindow --> Market
+PlayWindow --> ExternalConj
+
+class Fund {
+    + currentStatus() : FundStatus
+}
+
+class Market {
+    + get_available_assets()
+}
+
+class ExternalConj {
+    + getStockPrice(...)
+    + getMetalPrice(...)
+}
+
+@enduml

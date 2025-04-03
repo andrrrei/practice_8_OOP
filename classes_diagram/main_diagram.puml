@@ -1,0 +1,124 @@
+@startuml GameArchitectureFull
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+
+class Game {
+    - currentMonth : int
+    - maxMonths : int
+    - fund : Fund
+    - externalConj : ExternalConj
+    - player : Player
+    + simulateMonth() : void
+}
+
+class Player {
+    - playerName : str
+    + makeInitialInvestments(...) : void
+    + managePortfolio(...) : void
+}
+
+class Fund {
+    - capital : float
+    - taxRate : float
+    - monthlyProfit : float
+    - portfolio : Portfolio
+    + calcMonthlyProfit(conj) : float
+    + payTax() : float
+    + acceptNewInvestments(amount) : void
+    + handleRedemptions(amount) : void
+}
+
+class Portfolio {
+    - investments : List<Investment>
+    + addInvestment(inv) : void
+    + calcTotalValue(conj) : float
+    + calcMonthlyProfit(conj) : tuple
+}
+
+class PlayerPurchase {
+    - stocks : List<StockPurchase>
+    - deposits : List<DepositPurchase>
+    - metals : List<MetalPurchase>
+    - bonds : List<BondPurchase>
+}
+
+class StockPurchase {
+    - companyName : str
+    - shares : int
+}
+
+class DepositPurchase {
+    - bank : str
+    - amount : float
+    - termMonths : int
+}
+
+class MetalPurchase {
+    - metalType : str
+    - quantity : float
+}
+
+class BondPurchase {
+    - bondId : str
+    - faceValue : float
+    - purchasePrice : float
+    - interestRate : float
+    - maturityMonths : int
+}
+
+abstract class Investment {
+    - id : str
+    - amountInvested : float
+    - currency : str
+    + calcMonthlyProfit(conj) : float
+    + getCurrentValue(conj) : float
+}
+
+class Stock {
+    - companyName : str
+    - shares : int
+    - purchasePrice : float
+}
+
+class BankDeposit {
+    - bankName : str
+    - interestRate : float
+    - depositTermMonths : int
+    - currentTermPassed : int
+}
+
+class PreciousMetal {
+    - metalType : str
+    - quantity : float
+    - purchasePrice : float
+}
+
+class GovernmentBond {
+    - bondId : str
+    - faceValue : float
+    - interestRate : float
+    - purchasePrice : float
+    - maturityMonths : int
+}
+
+Game --> Fund
+Game --> Player
+Game --> ExternalConj
+Player --> Fund
+Player --> PlayerPurchase
+PlayerPurchase --> StockPurchase
+PlayerPurchase --> DepositPurchase
+PlayerPurchase --> MetalPurchase
+PlayerPurchase --> BondPurchase
+
+Fund *-- Portfolio
+Portfolio o-- Investment
+
+Investment <|-- Stock
+Investment <|-- BankDeposit
+Investment <|-- PreciousMetal
+Investment <|-- GovernmentBond
+
+@enduml

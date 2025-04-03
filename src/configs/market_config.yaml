@@ -5,25 +5,29 @@ stocks:
 
   - company_name: "Т"
     initial_price: 95.0
-    currency: "USD"
+    currency: "RUB"
+
+  - company_name: "Газпром"
+    initial_price: 60.0
+    currency: "RUB"
 
 banks:
   - bank_name: "ТБанк"
     deposit_interest_rate: 0.05
-    currency: "USD"
+    currency: "RUB"
 
   - bank_name: "Сбер"
     deposit_interest_rate: 0.045
-    currency: "EUR"
+    currency: "RUB"
 
 metals:
-  - metal_type: "Gold"
+  - metal_type: "Золото"
     initial_price: 1800.0
-    currency: "USD"
+    currency: "RUB"
 
-  - metal_type: "Silver"
+  - metal_type: "Серебро"
     initial_price: 25.0
-    currency: "USD"
+    currency: "RUB"
 
 bonds:
   - bond_id: "ОФЗ26234"

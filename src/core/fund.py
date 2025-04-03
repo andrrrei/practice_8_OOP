@@ -12,10 +12,10 @@ class Fund:
         self.monthly_profit: float = 0.0
 
     def calc_monthly_profit(self, conj: ExternalConj) -> float:
-        profit: float = self.portfolio.calc_monthly_profit(conj)
-        self.monthly_profit = profit
-        self.capital += profit
-        return profit
+        total_profit, profit_by_asset = self.portfolio.calc_monthly_profit(conj)
+        self.monthly_profit = total_profit
+        self.capital += total_profit
+        return profit_by_asset
 
     def pay_tax(self) -> float:
         tax: float = self.monthly_profit * self.tax_rate

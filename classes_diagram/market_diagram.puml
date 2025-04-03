@@ -1,0 +1,73 @@
+@startuml MarketAndConjuctureClean
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+
+class Market {
+    - config : MarketConfig
+    + create_external_conj() : ExternalConj
+}
+
+class ExternalConj {
+    - data : ExternalConjData
+    + update_conj() : void
+    + getStockPrice(name) : float
+    + getMetalPrice(name) : float
+    + getDepositRate(name) : float
+    + getBondRate(name) : float
+}
+
+Market --> ExternalConj
+Market --> MarketConfig
+
+class ExternalConjData {
+    - currentMonth : int
+    - stockPrices : List<PriceItem>
+    - metalPrices : List<PriceItem>
+    - interestRates : List<PriceItem>
+    - bondRates : List<PriceItem>
+    - volatility_config : ExternalConjConfig
+}
+
+class ExternalConjConfig {
+    - stocks : AssetVolatility
+    - metals : AssetVolatility
+    - deposits : AssetVolatility
+    - bonds : AssetVolatility
+}
+
+class AssetVolatility {
+    - drift : float
+    - volatility : float
+}
+
+class PriceItem {
+    - item_id : str
+    - value : float
+}
+
+ExternalConj --> ExternalConjData
+ExternalConjData --> ExternalConjConfig
+ExternalConjData --> PriceItem
+ExternalConjConfig --> AssetVolatility
+
+class MarketConfig {
+    - stocks : List<StockConfig>
+    - banks : List<BankConfig>
+    - metals : List<MetalConfig>
+    - bonds : List<BondConfig>
+}
+
+class StockConfig
+class BankConfig
+class MetalConfig
+class BondConfig
+
+MarketConfig --> StockConfig
+MarketConfig --> BankConfig
+MarketConfig --> MetalConfig
+MarketConfig --> BondConfig
+MarketConfig --> ExternalConjConfig
+
+@enduml
