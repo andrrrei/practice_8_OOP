@@ -46,18 +46,18 @@ class StartWindow(QMainWindow):
         self.form_layout.addRow("Стартовый капитал:", self.capital_input)
 
         self.tax_rate_input = QDoubleSpinBox()
-        self.tax_rate_input.setRange(0.0, 1.0)
-        self.tax_rate_input.setDecimals(3)
-        self.tax_rate_input.setSingleStep(0.01)
-        self.tax_rate_input.setValue(0.17)
-        self.form_layout.addRow("Налоговая ставка:", self.tax_rate_input)
+        self.tax_rate_input.setRange(0.0, 100.0)
+        self.tax_rate_input.setDecimals(1)
+        self.tax_rate_input.setSingleStep(0.1)
+        self.tax_rate_input.setValue(17)
+        self.form_layout.addRow("Налоговая ставка: (%)", self.tax_rate_input)
 
         self.months_input = QSpinBox()
         self.months_input.setRange(1, 60)
         self.months_input.setValue(12)
         self.form_layout.addRow("Количество месяцев:", self.months_input)
 
-        self.setup_initial_assets_ui()
+        # self.setup_initial_assets_ui()
 
         self.start_button = QPushButton("Начать игру")
         self.start_button.clicked.connect(self.on_start_clicked)
@@ -134,52 +134,47 @@ class StartWindow(QMainWindow):
 
     def on_start_clicked(self):
         capital = self.capital_input.value()
-        tax_rate = self.tax_rate_input.value()
+        tax_rate = self.tax_rate_input.value() / 100
         months = self.months_input.value()
 
-        stock_purchases = []
-        for sname, spin in self.stocks_spinboxes.items():
-            qty = spin.value()
-            if qty > 0:
-                stock_purchases.append(
-                    StockPurchase(company_name=sname, shares=int(qty))
-                )
+        # stock_purchases = []
+        # for sname, spin in self.stocks_spinboxes.items():
+        #     qty = spin.value()
+        #     if qty > 0:
+        #         stock_purchases.append(
+        #             StockPurchase(company_name=sname, shares=int(qty))
+        #         )
 
-        deposit_purchases = []
-        for bname, spin in self.deposits_spinboxes.items():
-            amt = spin.value()
-            if amt > 0:
-                deposit_purchases.append(
-                    DepositPurchase(bank=bname, amount=amt, term_months=12)
-                )
+        # deposit_purchases = []
+        # for bname, spin in self.deposits_spinboxes.items():
+        #     amt = spin.value()
+        #     if amt > 0:
+        #         deposit_purchases.append(
+        #             DepositPurchase(bank=bname, amount=amt, term_months=12)
+        #         )
 
-        metal_purchases = []
-        for mname, spin in self.metals_spinboxes.items():
-            qty = spin.value()
-            if qty > 0:
-                metal_purchases.append(MetalPurchase(metal_type=mname, quantity=qty))
+        # metal_purchases = []
+        # for mname, spin in self.metals_spinboxes.items():
+        #     qty = spin.value()
+        #     if qty > 0:
+        #         metal_purchases.append(MetalPurchase(metal_type=mname, quantity=qty))
 
-        bond_purchases = []
-        for bond_id, spin in self.bonds_spinboxes.items():
-            count = spin.value()
-            if count > 0:
-                for _ in range(int(count)):
-                    bond_purchases.append(
-                        BondPurchase(
-                            bond_id=bond_id,
-                            face_value=0,
-                            purchase_price=0,
-                            interest_rate=0,
-                            maturity_months=12,
-                        )
-                    )
+        # bond_purchases = []
+        # for bond_id, spin in self.bonds_spinboxes.items():
+        #     count = spin.value()
+        #     if count > 0:
+        #         for _ in range(int(count)):
+        #             bond_purchases.append(
+        #                 BondPurchase(
+        #                     bond_id=bond_id,
+        #                     face_value=0,
+        #                     purchase_price=0,
+        #                     interest_rate=0,
+        #                     maturity_months=12,
+        #                 )
+        #             )
 
-        initial_decision = PlayerPurchase(
-            stocks=stock_purchases,
-            deposits=deposit_purchases,
-            metals=metal_purchases,
-            bonds=bond_purchases,
-        )
+        initial_decision = PlayerPurchase()
 
         self.sim_window = SimulationWindow(
             capital=capital,

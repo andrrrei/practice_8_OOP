@@ -179,3 +179,143 @@ class DepositGraphWidget(QWidget):
         self.ax.legend()
         self.figure.tight_layout()
         self.canvas.draw()
+
+
+# assets_graph_widgets.py
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
+
+
+class AssetsComboGraphWidget(QWidget):
+    """
+    Универсальный график с переключением между:
+    stocks, metals, bonds, deposits.
+    - Не сбрасывает историю при переключении.
+    - update_data(...) лишь добавляет значения за новый month.
+    - plot_current_type() всегда перерисовывает выбранный набор.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.figure = plt.Figure(figsize=(5, 3))
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.figure)
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+
+        # Тип актива, который отображается
+        self.current_asset_type = "stocks"
+
+        # Для каждого вида активов храним
+        # data_dict[asset_name] = [(month1, value1), (month2, value2), ...]
+        self.stocks_data = {}
+        self.metals_data = {}
+        self.bonds_data = {}
+        self.deposits_data = {}
+
+        self.ax.set_title("График активов")
+        self.ax.set_xlabel("Месяц")
+        self.ax.set_ylabel("Значение")
+
+    def set_asset_type(self, asset_type: str):
+        """
+        Вызывается при смене пункта в ComboBox: "stocks", "metals", "bonds", "deposits".
+        Сразу перерисовываем (plot_current_type).
+        """
+        self.current_asset_type = asset_type
+        self.plot_current_type()
+
+    def update_data(
+        self,
+        month: int,
+        stock_prices: list,  # list of PriceItem
+        metal_prices: list,  # list of PriceItem
+        bond_rates: list,  # list of PriceItem
+        deposit_rates: list,  # list of PriceItem
+    ):
+        """
+        На каждом месяце добавляем новые точки
+        (month, price) / (month, rate) в соответствующие dict'и.
+        Затем можно сразу перерисовать текущий вид.
+        """
+        # Обновляем акции
+        for item in stock_prices:
+            company = item.item_id
+            val = item.value
+            if company not in self.stocks_data:
+                self.stocks_data[company] = []
+            self.stocks_data[company].append((month, val))
+
+        # Металлы
+        for item in metal_prices:
+            mtype = item.item_id
+            val = item.value
+            if mtype not in self.metals_data:
+                self.metals_data[mtype] = []
+            self.metals_data[mtype].append((month, val))
+
+        # Облигации
+        for item in bond_rates:
+            bond_id = item.item_id
+            val = item.value
+            if bond_id not in self.bonds_data:
+                self.bonds_data[bond_id] = []
+            self.bonds_data[bond_id].append((month, val))
+
+        # Депозиты
+        for item in deposit_rates:
+            bank = item.item_id
+            val = item.value
+            if bank not in self.deposits_data:
+                self.deposits_data[bank] = []
+            self.deposits_data[bank].append((month, val))
+
+        # После добавления новых данных перерисуем текущий вид
+        self.plot_current_type()
+
+    def plot_current_type(self):
+        """
+        Отображаем (plot) только тот массив данных, который
+        соответствует self.current_asset_type.
+        """
+        self.ax.clear()
+
+        # Настройка подписей
+        if self.current_asset_type == "stocks":
+            self.ax.set_title("Акции")
+            self.ax.set_ylabel("Цена")
+            # Построим все компании
+            for comp, arr in self.stocks_data.items():
+                # arr = [(m1, v1), (m2, v2), ...]
+                months = [x[0] for x in arr]
+                values = [x[1] for x in arr]
+                self.ax.plot(months, values, marker="o", label=comp)
+        elif self.current_asset_type == "metals":
+            self.ax.set_title("Металлы")
+            self.ax.set_ylabel("Цена")
+            for mtype, arr in self.metals_data.items():
+                months = [x[0] for x in arr]
+                values = [x[1] for x in arr]
+                self.ax.plot(months, values, marker="o", label=mtype)
+        elif self.current_asset_type == "bonds":
+            self.ax.set_title("Облигации")
+            self.ax.set_ylabel("Ставка")
+            for b_id, arr in self.bonds_data.items():
+                months = [x[0] for x in arr]
+                values = [x[1] for x in arr]
+                self.ax.plot(months, values, marker="o", label=b_id)
+        elif self.current_asset_type == "deposits":
+            self.ax.set_title("Депозиты")
+            self.ax.set_ylabel("Ставка")
+            for bank, arr in self.deposits_data.items():
+                months = [x[0] for x in arr]
+                values = [x[1] for x in arr]
+                self.ax.plot(months, values, marker="o", label=bank)
+
+        self.ax.set_xlabel("Месяц")
+        self.ax.legend()
+        self.figure.tight_layout()
+        self.canvas.draw()

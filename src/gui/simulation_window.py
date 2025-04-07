@@ -18,7 +18,9 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QTabWidget,
     QVBoxLayout,
+    QComboBox,
 )
+from PyQt5.QtCore import Qt
 
 
 from gui.portfolio_graph_widget import PortfolioGraphWidget
@@ -27,6 +29,7 @@ from gui.assets_graph_widgets import (
     BondGraphWidget,
     DepositGraphWidget,
     MetalGraphWidget,
+    AssetsComboGraphWidget,
 )
 from core.models import (
     PlayerPurchase,
@@ -56,9 +59,6 @@ mpl.rcParams["xtick.labelsize"] = 8
 mpl.rcParams["ytick.labelsize"] = 8
 
 
-# ===========================
-#   2. Вкладка покупки (без диалога)
-# ===========================
 class PurchaseTab(QWidget):
 
     def __init__(
@@ -196,8 +196,9 @@ class PurchaseTab(QWidget):
             self.bond_form.addRow(label_text, spin)
 
         self.btn_apply = QPushButton("Применить изменения")
+        self.btn_apply.setFixedWidth(250)
         self.btn_apply.clicked.connect(self.on_apply)
-        main_layout.addWidget(self.btn_apply)
+        main_layout.addWidget(self.btn_apply, alignment=Qt.AlignHCenter)
 
         main_layout.addStretch()
 
@@ -467,27 +468,37 @@ class SimulationWindow(QMainWindow):
 
         self.portfolio_text = QTextEdit()
         self.portfolio_text.setReadOnly(True)
+        self.portfolio_text.setMinimumHeight(200)
         portfolio_tab_layout.addWidget(QLabel("Текущее состояние портфеля:"))
         portfolio_tab_layout.addWidget(self.portfolio_text)
 
         self.portfolio_value_graph = PortfolioGraphWidget()
         portfolio_tab_layout.addWidget(self.portfolio_value_graph)
 
-        graphs_grid = QGridLayout()
-        # Акции
-        self.stock_graph = StockGraphWidget()
-        graphs_grid.addWidget(self.stock_graph, 0, 0)
-        # Металлы
-        self.metal_graph = MetalGraphWidget()
-        graphs_grid.addWidget(self.metal_graph, 0, 1)
-        # Облигации
-        self.bond_graph = BondGraphWidget()
-        graphs_grid.addWidget(self.bond_graph, 1, 0)
-        # Депозиты
-        self.deposit_graph = DepositGraphWidget()
-        graphs_grid.addWidget(self.deposit_graph, 1, 1)
+        # graphs_grid = QGridLayout()
+        # # Акции
+        # self.stock_graph = StockGraphWidget()
+        # graphs_grid.addWidget(self.stock_graph, 0, 0)
+        # # Металлы
+        # self.metal_graph = MetalGraphWidget()
+        # graphs_grid.addWidget(self.metal_graph, 0, 1)
+        # # Облигации
+        # self.bond_graph = BondGraphWidget()
+        # graphs_grid.addWidget(self.bond_graph, 1, 0)
+        # # Депозиты
+        # self.deposit_graph = DepositGraphWidget()
+        # graphs_grid.addWidget(self.deposit_graph, 1, 1)
 
-        portfolio_tab_layout.addLayout(graphs_grid)
+        # portfolio_tab_layout.addLayout(graphs_grid)
+
+        self.asset_combo = QComboBox()
+        self.asset_combo.addItems(["Акции", "Металлы", "Облигации", "Депозиты"])
+        self.asset_combo.currentIndexChanged.connect(self.on_asset_combo_changed)
+        portfolio_tab_layout.addWidget(QLabel("Выбор типа актива:"))
+        portfolio_tab_layout.addWidget(self.asset_combo)
+
+        self.assets_combo_graph = AssetsComboGraphWidget()
+        portfolio_tab_layout.addWidget(self.assets_combo_graph)
 
         self.tab_widget.addTab(self.portfolio_tab, "Портфель и графики")
 
@@ -503,6 +514,16 @@ class SimulationWindow(QMainWindow):
 
         self.update_portfolio_display()
         self.update_all_graphs()
+
+    def on_asset_combo_changed(self, index: int):
+        if index == 0:
+            self.assets_combo_graph.set_asset_type("stocks")
+        elif index == 1:
+            self.assets_combo_graph.set_asset_type("metals")
+        elif index == 2:
+            self.assets_combo_graph.set_asset_type("bonds")
+        elif index == 3:
+            self.assets_combo_graph.set_asset_type("deposits")
 
     def exit_game(self):
         QApplication.instance().quit()
@@ -527,7 +548,7 @@ class SimulationWindow(QMainWindow):
             self.update_all_graphs()
 
             QApplication.processEvents()
-            time.sleep(0.1)
+            # time.sleep(0.1)
 
         self.switch_purchase_tab_to_final_stats()
         self.btn_next_month.setEnabled(False)
@@ -539,10 +560,12 @@ class SimulationWindow(QMainWindow):
 
             old_stdout = sys.stdout
             sys.stdout = io.StringIO()
-            self.game.simulate_month()
+            self.game.simulate_month(log_callback=self.log_to_portfolio)
+            self.update_portfolio_display()
+            month_output = sys.stdout.getvalue()
             sys.stdout = old_stdout
 
-            self.update_portfolio_display()
+            self.portfolio_text.append(month_output)
             self.purchase_tab.reload_assets()
             self.update_all_graphs()
         else:
@@ -550,14 +573,13 @@ class SimulationWindow(QMainWindow):
             self.btn_fast_forward.setEnabled(False)
             self.switch_purchase_tab_to_final_stats()
 
+    def log_to_portfolio(self, message: str) -> None:
+        self.portfolio_text.append(message)
+
     def update_portfolio_display(self):
         status = self.fund.current_status(self.external_conj)
 
-        text_info = (
-            f"Капитал: {self.fund.capital:.2f}\n"
-            f"Стоимость портфеля: {status.portfolio_value:.2f}\n"
-            f"Последняя прибыль: {status.monthly_profit:.2f}\n\n"
-        )
+        text_info = f"Стоимость портфеля: {status.portfolio_value:.2f}\n\n"
 
         if not self.portfolio.investments:
             text_info += "Пока нет инвестиций\n"
@@ -569,16 +591,29 @@ class SimulationWindow(QMainWindow):
 
         self.portfolio_text.setPlainText(text_info)
 
+    # def update_all_graphs(self):
+    #     status = self.fund.current_status(self.external_conj)
+    #     month = self.current_month
+
+    #     self.portfolio_value_graph.update_graph(month, status.portfolio_value)
+
+    #     self.stock_graph.update_graph(month, self.external_conj.data.stock_prices)
+    #     self.metal_graph.update_graph(month, self.external_conj.data.metal_prices)
+    #     self.bond_graph.update_graph(month, self.external_conj.data.bond_rates)
+    #     self.deposit_graph.update_graph(month, self.external_conj.data.interest_rates)
+
     def update_all_graphs(self):
         status = self.fund.current_status(self.external_conj)
         month = self.current_month
-
         self.portfolio_value_graph.update_graph(month, status.portfolio_value)
 
-        self.stock_graph.update_graph(month, self.external_conj.data.stock_prices)
-        self.metal_graph.update_graph(month, self.external_conj.data.metal_prices)
-        self.bond_graph.update_graph(month, self.external_conj.data.bond_rates)
-        self.deposit_graph.update_graph(month, self.external_conj.data.interest_rates)
+        self.assets_combo_graph.update_data(
+            month,
+            self.external_conj.data.stock_prices,
+            self.external_conj.data.metal_prices,
+            self.external_conj.data.bond_rates,
+            self.external_conj.data.interest_rates,
+        )
 
     def get_current_holdings(self, portfolio):
         holdings = PortfolioHoldings()
@@ -662,30 +697,75 @@ class SimulationWindow(QMainWindow):
             summary_widget.setItem(row, 1, QTableWidgetItem(f"{sum_profit:.2f}"))
             summary_widget.setItem(row, 2, QTableWidgetItem(f"{last_value:.2f}"))
 
-        monthly_records = []
+        # monthly_records = []
+        # for inv_id, record_list in self.game.assets_statistics.items():
+        #     for r in record_list:
+        #         monthly_records.append(
+        #             {
+        #                 "inv_id": inv_id,
+        #                 "month": r["month"],
+        #                 "profit": r["profit"],
+        #                 "value": r["value"],
+        #             }
+        #         )
+
+        # monthly_records.sort(key=lambda x: (x["inv_id"], x["month"]))
+
+        # monthly_widget.setColumnCount(4)
+        # monthly_widget.setRowCount(len(monthly_records))
+        # monthly_widget.setHorizontalHeaderLabels(
+        #     ["ID актива", "Месяц", "Прибыль за месяц", "Стоимость"]
+        # )
+
+        # for row, rec in enumerate(monthly_records):
+        #     monthly_widget.setItem(row, 0, QTableWidgetItem(rec["inv_id"]))
+        #     monthly_widget.setItem(row, 1, QTableWidgetItem(str(rec["month"])))
+        #     monthly_widget.setItem(row, 2, QTableWidgetItem(f"{rec['profit']:.2f}"))
+        #     monthly_widget.setItem(row, 3, QTableWidgetItem(f"{rec['value']:.2f}"))
+
+        from collections import defaultdict
+
+        data = defaultdict(lambda: {})
+        all_months = set()
+
         for inv_id, record_list in self.game.assets_statistics.items():
             for r in record_list:
-                monthly_records.append(
-                    {
-                        "inv_id": inv_id,
-                        "month": r["month"],
-                        "profit": r["profit"],
-                        "value": r["value"],
-                    }
-                )
+                m = r["month"]
+                pr = r["profit"]
+                val = r["value"]
+                data[inv_id][m] = {"profit": pr, "value": val}
+                all_months.add(m)
 
-        monthly_records.sort(key=lambda x: (x["inv_id"], x["month"]))
+        all_months = sorted(list(all_months))  # от 1 до max
+        all_ids = sorted(list(data.keys()))
 
-        monthly_widget.setColumnCount(4)
-        monthly_widget.setRowCount(len(monthly_records))
-        monthly_widget.setHorizontalHeaderLabels(
-            ["ID актива", "Месяц", "Прибыль за месяц", "Стоимость"]
-        )
+        # Теперь строим таблицу:
+        # Число строк = 2 * количество inv_id
+        # Число столбцов = 1 (для ID) + число месяцев
+        monthly_widget.setRowCount(len(all_ids) * 2)
+        monthly_widget.setColumnCount(len(all_months) + 1)
 
-        for row, rec in enumerate(monthly_records):
-            monthly_widget.setItem(row, 0, QTableWidgetItem(rec["inv_id"]))
-            monthly_widget.setItem(row, 1, QTableWidgetItem(str(rec["month"])))
-            monthly_widget.setItem(row, 2, QTableWidgetItem(f"{rec['profit']:.2f}"))
-            monthly_widget.setItem(row, 3, QTableWidgetItem(f"{rec['value']:.2f}"))
+        # Заголовки столбцов:
+        headers = ["Актив / Показатель"]
+        for m in all_months:
+            headers.append(f"Месяц {m}")
+        monthly_widget.setHorizontalHeaderLabels(headers)
+
+        row_idx = 0
+        for inv_id in all_ids:
+            # строка "прибыль"
+            monthly_widget.setItem(row_idx, 0, QTableWidgetItem(f"{inv_id} (прибыль)"))
+            # заполняем помесячно
+            for col_i, m in enumerate(all_months, start=1):
+                pm = data[inv_id].get(m, {"profit": 0})["profit"]
+                monthly_widget.setItem(row_idx, col_i, QTableWidgetItem(f"{pm:.2f}"))
+            row_idx += 1
+
+            # строка "стоимость"
+            monthly_widget.setItem(row_idx, 0, QTableWidgetItem(f"{inv_id} (стоим.)"))
+            for col_i, m in enumerate(all_months, start=1):
+                val = data[inv_id].get(m, {"value": 0})["value"]
+                monthly_widget.setItem(row_idx, col_i, QTableWidgetItem(f"{val:.2f}"))
+            row_idx += 1
 
         self.tab_widget.insertTab(1, final_stats_widget, "Финальная статистика")

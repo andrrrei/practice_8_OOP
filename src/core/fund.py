@@ -2,6 +2,7 @@ from core.portfolio import Portfolio
 from core.external_conjucture import ExternalConj
 from investments.investment import Investment
 from core.models import FundStatus
+from typing import Callable
 
 
 class Fund:

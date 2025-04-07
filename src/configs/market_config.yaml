@@ -11,6 +11,8 @@ stocks:
     initial_price: 60.0
     currency: "RUB"
 
+  
+
 banks:
   - bank_name: "ТБанк"
     deposit_interest_rate: 0.05

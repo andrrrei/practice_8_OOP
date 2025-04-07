@@ -17,9 +17,9 @@ class Game:
         self.statistics: list[dict[str, float]] = []
         self.assets_statistics: dict[str, dict[str, float]] = {}
 
-    def simulate_month(self) -> None:
+    def simulate_month(self, log_callback=None) -> None:
 
-        print(f"\n--- Месяц {self.current_month} ---")
+        print(f"\n--- Итоги месяца {self.current_month} ---")
 
         # 1. Обновление внешней конъюнктуры
         self.external_conj.update_conj()
